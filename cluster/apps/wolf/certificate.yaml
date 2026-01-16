@@ -1,5 +1,21 @@
 # TLS Certificate for wolf.grffn.ca
-# Uses grffn tenant's cert-manager issuer
+# Uses HTTP-01 challenge via ingress (no AWS credentials needed)
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-http
+  namespace: wolf
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: willgriffin@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-http-account-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx
+---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -8,7 +24,7 @@ metadata:
 spec:
   secretName: wolf-tls
   issuerRef:
-    name: letsencrypt-prod
-    kind: ClusterIssuer
+    name: letsencrypt-http
+    kind: Issuer
   dnsNames:
     - wolf.grffn.ca
