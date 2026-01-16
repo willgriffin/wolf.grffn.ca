@@ -49,8 +49,37 @@ spec:
             # Allow connections from Wolf container
             - name: DOCKER_TLS_CERTDIR
               value: ""
-          args:
-            - --storage-driver=overlay2
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Start dockerd in background
+              dockerd-entrypoint.sh --storage-driver=overlay2 &
+              DOCKER_PID=$!
+
+              # Wait for docker to be ready
+              echo "Waiting for Docker daemon..."
+              for i in $(seq 1 60); do
+                if docker info >/dev/null 2>&1; then
+                  echo "Docker daemon is ready!"
+                  break
+                fi
+                sleep 1
+              done
+
+              # Create nvidia driver volume with libraries from host
+              if ! docker volume inspect nvidia-driver-vol >/dev/null 2>&1; then
+                echo "Creating nvidia-driver-vol volume..."
+                docker volume create nvidia-driver-vol
+                # Copy nvidia drivers into the volume
+                docker run --rm -v nvidia-driver-vol:/nvidia-drivers \
+                  -v /run/opengl-driver:/host-drivers:ro \
+                  alpine sh -c "cp -r /host-drivers/* /nvidia-drivers/ 2>/dev/null || true"
+                echo "nvidia-driver-vol created and populated"
+              fi
+
+              # Keep container running
+              wait $DOCKER_PID
           volumeMounts:
             - name: dind-storage
               mountPath: /var/lib/docker
