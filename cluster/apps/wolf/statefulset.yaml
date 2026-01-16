@@ -38,27 +38,6 @@ spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
 
-      initContainers:
-        # Wait for DinD to be ready
-        - name: wait-for-docker
-          image: docker:24-cli
-          command:
-            - sh
-            - -c
-            - |
-              echo "Waiting for Docker daemon..."
-              until docker info >/dev/null 2>&1; do
-                sleep 1
-              done
-              echo "Docker is ready!"
-          env:
-            - name: DOCKER_HOST
-              value: tcp://localhost:2375
-          resources:
-            requests:
-              cpu: 10m
-              memory: 32Mi
-
       containers:
         # Docker-in-Docker daemon
         # Wolf will spawn game containers here
@@ -153,6 +132,14 @@ spec:
               cpu: 4000m
               memory: 4Gi
               nvidia.com/gpu: "1"
+          # Wait for Wolf to be ready (includes waiting for Docker)
+          startupProbe:
+            httpGet:
+              path: /
+              port: 47989
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
           ports:
             - name: http
               containerPort: 47989
