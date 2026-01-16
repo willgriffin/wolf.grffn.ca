@@ -132,14 +132,21 @@ spec:
               cpu: 4000m
               memory: 4Gi
               nvidia.com/gpu: "1"
-          # Wait for Wolf to be ready (includes waiting for Docker)
+          # Wait for Wolf HTTP server to be ready
           startupProbe:
-            httpGet:
-              path: /
+            tcpSocket:
               port: 47989
-            initialDelaySeconds: 10
+            initialDelaySeconds: 5
             periodSeconds: 5
             failureThreshold: 30
+          readinessProbe:
+            tcpSocket:
+              port: 47989
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 47989
+            periodSeconds: 30
           ports:
             - name: http
               containerPort: 47989
