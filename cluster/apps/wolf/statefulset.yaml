@@ -134,6 +134,10 @@ spec:
               mountPath: /dev/nvidiactl
             - name: nvidia-uvm
               mountPath: /dev/nvidia-uvm
+            - name: nvidia-modeset
+              mountPath: /dev/nvidia-modeset
+            - name: nvidia-uvm-tools
+              mountPath: /dev/nvidia-uvm-tools
             - name: nvidia-driver
               mountPath: /run/opengl-driver
               readOnly: true
@@ -215,6 +219,14 @@ spec:
         - name: nvidia-uvm
           hostPath:
             path: /dev/nvidia-uvm
+            type: CharDevice
+        - name: nvidia-modeset
+          hostPath:
+            path: /dev/nvidia-modeset
+            type: CharDevice
+        - name: nvidia-uvm-tools
+          hostPath:
+            path: /dev/nvidia-uvm-tools
             type: CharDevice
         - name: nvidia-driver
           hostPath:
