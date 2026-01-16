@@ -7,6 +7,10 @@ metadata:
   namespace: wolf
   annotations:
     cert-manager.io/issuer: letsencrypt-http
+    # Basic auth protection
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: wolf-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Wolf Gaming - Authentication Required"
 spec:
   ingressClassName: nginx
   tls:
