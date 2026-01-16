@@ -116,8 +116,8 @@ spec:
             - configMapRef:
                 name: wolf-config
           volumeMounts:
-            # Wolf config directory
-            - name: wolf-config-dir
+            # Wolf config directory (from volumeClaimTemplate)
+            - name: wolf-config
               mountPath: /etc/wolf
             # udev rules for virtual input devices
             - name: udev
@@ -174,9 +174,6 @@ spec:
               protocol: UDP
 
       volumes:
-        - name: wolf-config-dir
-          persistentVolumeClaim:
-            claimName: wolf-config
         - name: dind-storage
           emptyDir: {}
         - name: udev
