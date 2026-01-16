@@ -80,6 +80,20 @@ spec:
           image: ghcr.io/games-on-whales/wolf:stable
           securityContext:
             privileged: true
+          # Wait for Docker daemon before starting Wolf
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for Docker daemon..."
+              for i in $(seq 1 60); do
+                if wget -qO- http://localhost:2375/version >/dev/null 2>&1; then
+                  echo "Docker is ready!"
+                  break
+                fi
+                sleep 1
+              done
+              exec /entrypoint.sh
           env:
             # Connect to DinD
             - name: DOCKER_HOST
