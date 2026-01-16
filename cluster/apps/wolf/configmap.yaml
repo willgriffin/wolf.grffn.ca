@@ -20,6 +20,8 @@ data:
   GBM_BACKENDS_PATH: "/run/opengl-driver/lib/gbm"
   # Use manual nvidia driver volume instead of nvidia runtime (DinD doesn't have nvidia runtime)
   NVIDIA_DRIVER_VOLUME_NAME: "nvidia-driver-vol"
+  # XDG_RUNTIME_DIR where Wayland sockets live - must be accessible to spawned containers
+  XDG_RUNTIME_DIR: "/tmp/sockets"
   # Streaming ports (must match service definitions)
   WOLF_HTTP_PORT: "47989"
   WOLF_HTTPS_PORT: "47984"

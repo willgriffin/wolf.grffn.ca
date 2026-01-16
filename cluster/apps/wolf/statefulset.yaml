@@ -78,6 +78,13 @@ spec:
                 echo "nvidia-driver-vol created and populated"
               fi
 
+              # Create XDG_RUNTIME_DIR volume for Wayland sockets
+              if ! docker volume inspect xdg-runtime-vol >/dev/null 2>&1; then
+                echo "Creating xdg-runtime-vol volume..."
+                docker volume create xdg-runtime-vol
+                echo "xdg-runtime-vol created"
+              fi
+
               # Keep container running
               wait $DOCKER_PID
           volumeMounts:
@@ -99,6 +106,9 @@ spec:
             - name: nix-store
               mountPath: /nix/store
               readOnly: true
+            # Shared XDG_RUNTIME_DIR for Wayland sockets
+            - name: xdg-runtime
+              mountPath: /tmp/sockets
           resources:
             requests:
               cpu: 100m
@@ -179,6 +189,9 @@ spec:
             # DRI for display
             - name: dri
               mountPath: /dev/dri
+            # Shared XDG_RUNTIME_DIR for Wayland sockets (same as DinD)
+            - name: xdg-runtime
+              mountPath: /tmp/sockets
           resources:
             requests:
               cpu: 500m
@@ -227,6 +240,8 @@ spec:
         - name: dind-storage
           emptyDir: {}
         - name: docker-socket
+          emptyDir: {}
+        - name: xdg-runtime
           emptyDir: {}
         - name: udev
           hostPath:
