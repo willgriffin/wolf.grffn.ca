@@ -71,10 +71,12 @@ spec:
               if ! docker volume inspect nvidia-driver-vol >/dev/null 2>&1; then
                 echo "Creating nvidia-driver-vol volume..."
                 docker volume create nvidia-driver-vol
-                # Copy nvidia drivers into the volume
+                # Copy nvidia drivers into the volume (with -L to dereference symlinks)
+                # Must also mount nix store since opengl-driver contains symlinks to it
                 docker run --rm -v nvidia-driver-vol:/nvidia-drivers \
                   -v /run/opengl-driver:/host-drivers:ro \
-                  alpine sh -c "cp -r /host-drivers/* /nvidia-drivers/ 2>/dev/null || true"
+                  -v /nix/store:/nix/store:ro \
+                  alpine sh -c "cp -rL /host-drivers/* /nvidia-drivers/ 2>/dev/null || true"
                 echo "nvidia-driver-vol created and populated"
               fi
 
@@ -108,7 +110,7 @@ spec:
               readOnly: true
             # Shared XDG_RUNTIME_DIR for Wayland sockets
             - name: xdg-runtime
-              mountPath: /tmp/sockets
+              mountPath: /mnt/wolf-sockets
           resources:
             requests:
               cpu: 100m
@@ -135,9 +137,11 @@ spec:
                 fi
                 sleep 1
               done
+              # Ensure XDG_RUNTIME_DIR exists for Wolf socket
+              mkdir -p /mnt/wolf-sockets
               # Create symlink for Wolf socket (Wolf-UI expects /var/run/wolf)
               mkdir -p /var/run/wolf
-              ln -sf /run/user/wolf/wolf.sock /var/run/wolf/wolf.sock
+              ln -sf /mnt/wolf-sockets/wolf.sock /var/run/wolf/wolf.sock
               exec /entrypoint.sh
           env:
             # Connect to DinD
@@ -191,7 +195,7 @@ spec:
               mountPath: /dev/dri
             # Shared XDG_RUNTIME_DIR for Wayland sockets (same as DinD)
             - name: xdg-runtime
-              mountPath: /tmp/sockets
+              mountPath: /mnt/wolf-sockets
           resources:
             requests:
               cpu: 500m
