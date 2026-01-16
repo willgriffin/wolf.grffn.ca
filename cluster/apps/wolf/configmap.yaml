@@ -16,6 +16,8 @@ data:
   # EGL/OpenGL configuration for NVIDIA (required for virtual compositor)
   __EGL_VENDOR_LIBRARY_DIRS: "/run/opengl-driver/share/glvnd/egl_vendor.d"
   __EGL_EXTERNAL_PLATFORM_CONFIG_DIRS: "/run/opengl-driver/share/egl/egl_external_platform.d"
+  # GBM backend for NVIDIA buffer allocation
+  GBM_BACKENDS_PATH: "/run/opengl-driver/lib/gbm"
   # Use manual nvidia driver volume instead of nvidia runtime (DinD doesn't have nvidia runtime)
   NVIDIA_DRIVER_VOLUME_NAME: "nvidia-driver-vol"
   # Streaming ports (must match service definitions)
