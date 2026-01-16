@@ -11,6 +11,8 @@ data:
   WOLF_LOG_LEVEL: "INFO"
   # Tailscale IP for streaming (fixes MAC address resolution)
   WOLF_INTERNAL_IP: "100.67.125.109"
+  # Dummy MAC for Tailscale (virtual interface has no MAC)
+  WOLF_INTERNAL_MAC: "00:00:00:00:00:01"
   # Streaming ports (must match service definitions)
   WOLF_HTTP_PORT: "47989"
   WOLF_HTTPS_PORT: "47984"
