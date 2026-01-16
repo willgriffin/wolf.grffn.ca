@@ -1,5 +1,6 @@
 # Ingress for Wolf web UI (pairing and management)
-# Moonlight streaming bypasses ingress via hostNetwork
+# Note: DNS now points to Tailscale IP, so this ingress is unused
+# Keeping for potential future use with public access
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -7,10 +8,6 @@ metadata:
   namespace: wolf
   annotations:
     cert-manager.io/issuer: letsencrypt-http
-    # Basic auth protection
-    nginx.ingress.kubernetes.io/auth-type: basic
-    nginx.ingress.kubernetes.io/auth-secret: wolf-basic-auth
-    nginx.ingress.kubernetes.io/auth-realm: "Wolf Gaming - Authentication Required"
 spec:
   ingressClassName: nginx
   tls:
