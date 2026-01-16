@@ -13,6 +13,9 @@ data:
   WOLF_INTERNAL_IP: "100.67.125.109"
   # Dummy MAC for Tailscale (virtual interface has no MAC)
   WOLF_INTERNAL_MAC: "00:00:00:00:00:01"
+  # EGL/OpenGL configuration for NVIDIA (required for virtual compositor)
+  __EGL_VENDOR_LIBRARY_DIRS: "/run/opengl-driver/share/glvnd/egl_vendor.d"
+  __EGL_EXTERNAL_PLATFORM_CONFIG_DIRS: "/run/opengl-driver/share/egl/egl_external_platform.d"
   # Streaming ports (must match service definitions)
   WOLF_HTTP_PORT: "47989"
   WOLF_HTTPS_PORT: "47984"
