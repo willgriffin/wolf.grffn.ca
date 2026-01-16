@@ -125,6 +125,9 @@ spec:
                 fi
                 sleep 1
               done
+              # Create symlink for Wolf socket (Wolf-UI expects /var/run/wolf)
+              mkdir -p /var/run/wolf
+              ln -sf /run/user/wolf/wolf.sock /var/run/wolf/wolf.sock
               exec /entrypoint.sh
           env:
             # Connect to DinD
