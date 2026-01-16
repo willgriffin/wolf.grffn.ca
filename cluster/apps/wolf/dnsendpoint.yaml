@@ -1,0 +1,17 @@
+# DNS record for wolf.grffn.ca
+# Points to cluster LoadBalancer for web UI access via ingress
+# Moonlight clients connect directly to snail node via Tailscale (100.67.125.109)
+# External-DNS in grffn namespace will create Route53 record
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: wolf
+  namespace: grffn
+spec:
+  endpoints:
+    - dnsName: wolf.grffn.ca
+      recordTTL: 300
+      recordType: A
+      targets:
+        # Cluster LoadBalancer IP (ingress for web UI)
+        - "135.181.115.252"

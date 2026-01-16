@@ -1,0 +1,55 @@
+# Wolf services
+# Note: With hostNetwork, these services are mainly for ingress routing
+# Moonlight clients connect directly to the node IP
+---
+# HTTP/HTTPS service for Wolf-Den web UI and pairing
+apiVersion: v1
+kind: Service
+metadata:
+  name: wolf-web
+  namespace: wolf
+  labels:
+    app.kubernetes.io/name: wolf
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: wolf
+  ports:
+    - name: http
+      port: 47989
+      targetPort: 47989
+      protocol: TCP
+    - name: https
+      port: 47984
+      targetPort: 47984
+      protocol: TCP
+---
+# Streaming service (for reference - clients use hostNetwork directly)
+apiVersion: v1
+kind: Service
+metadata:
+  name: wolf-stream
+  namespace: wolf
+  labels:
+    app.kubernetes.io/name: wolf
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: wolf
+  ports:
+    - name: control
+      port: 47999
+      targetPort: 47999
+      protocol: UDP
+    - name: rtsp
+      port: 48010
+      targetPort: 48010
+      protocol: TCP
+    - name: video
+      port: 48100
+      targetPort: 48100
+      protocol: UDP
+    - name: audio
+      port: 48200
+      targetPort: 48200
+      protocol: UDP

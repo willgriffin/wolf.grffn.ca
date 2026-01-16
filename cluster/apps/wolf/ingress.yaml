@@ -1,0 +1,26 @@
+# Ingress for Wolf web UI (pairing and management)
+# Moonlight streaming bypasses ingress via hostNetwork
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wolf
+  namespace: wolf
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - wolf.grffn.ca
+      secretName: wolf-tls
+  rules:
+    - host: wolf.grffn.ca
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wolf-web
+                port:
+                  number: 47989

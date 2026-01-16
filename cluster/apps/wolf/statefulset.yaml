@@ -1,0 +1,227 @@
+# Wolf StatefulSet with Docker-in-Docker sidecar
+# Wolf spawns game containers dynamically via the DinD Docker daemon
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wolf
+  namespace: wolf
+  labels:
+    app.kubernetes.io/name: wolf
+spec:
+  serviceName: wolf
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wolf
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: wolf
+    spec:
+      # Schedule on GPU node
+      nodeSelector:
+        gpu-nvidia: "true"
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+        - key: gpu
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+        - key: location
+          operator: Equal
+          value: home
+          effect: NoSchedule
+
+      # Use host network for Moonlight streaming (UDP latency sensitive)
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+
+      initContainers:
+        # Wait for DinD to be ready
+        - name: wait-for-docker
+          image: docker:24-cli
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for Docker daemon..."
+              until docker info >/dev/null 2>&1; do
+                sleep 1
+              done
+              echo "Docker is ready!"
+          env:
+            - name: DOCKER_HOST
+              value: tcp://localhost:2375
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+
+      containers:
+        # Docker-in-Docker daemon
+        # Wolf will spawn game containers here
+        - name: dind
+          image: docker:24-dind
+          securityContext:
+            privileged: true
+          env:
+            # Allow connections from Wolf container
+            - name: DOCKER_TLS_CERTDIR
+              value: ""
+          args:
+            - --storage-driver=overlay2
+          volumeMounts:
+            - name: dind-storage
+              mountPath: /var/lib/docker
+            # Pass through NVIDIA devices to spawned containers
+            - name: nvidia-dev
+              mountPath: /dev/nvidia0
+            - name: nvidia-ctl
+              mountPath: /dev/nvidiactl
+            - name: nvidia-uvm
+              mountPath: /dev/nvidia-uvm
+            - name: nvidia-driver
+              mountPath: /run/opengl-driver
+              readOnly: true
+            - name: nix-store
+              mountPath: /nix/store
+              readOnly: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+
+        # Wolf streaming server
+        - name: wolf
+          image: ghcr.io/games-on-whales/wolf:stable
+          securityContext:
+            privileged: true
+          env:
+            # Connect to DinD
+            - name: DOCKER_HOST
+              value: tcp://localhost:2375
+            # NVIDIA runtime
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: all
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+            - name: LD_LIBRARY_PATH
+              value: /run/opengl-driver/lib
+          envFrom:
+            - configMapRef:
+                name: wolf-config
+          volumeMounts:
+            # Wolf config directory
+            - name: wolf-config-dir
+              mountPath: /etc/wolf
+            # udev rules for virtual input devices
+            - name: udev
+              mountPath: /run/udev
+              readOnly: true
+            # Virtual input devices
+            - name: dev-uinput
+              mountPath: /dev/uinput
+            - name: dev-uhid
+              mountPath: /dev/uhid
+            # GPU devices
+            - name: nvidia-dev
+              mountPath: /dev/nvidia0
+            - name: nvidia-ctl
+              mountPath: /dev/nvidiactl
+            - name: nvidia-uvm
+              mountPath: /dev/nvidia-uvm
+            - name: nvidia-driver
+              mountPath: /run/opengl-driver
+              readOnly: true
+            - name: nix-store
+              mountPath: /nix/store
+              readOnly: true
+            # DRI for display
+            - name: dri
+              mountPath: /dev/dri
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: 4000m
+              memory: 4Gi
+              nvidia.com/gpu: "1"
+          ports:
+            - name: http
+              containerPort: 47989
+              protocol: TCP
+            - name: https
+              containerPort: 47984
+              protocol: TCP
+            - name: control
+              containerPort: 47999
+              protocol: UDP
+            - name: rtsp
+              containerPort: 48010
+              protocol: TCP
+            - name: video
+              containerPort: 48100
+              protocol: UDP
+            - name: audio
+              containerPort: 48200
+              protocol: UDP
+
+      volumes:
+        - name: wolf-config-dir
+          persistentVolumeClaim:
+            claimName: wolf-config
+        - name: dind-storage
+          emptyDir: {}
+        - name: udev
+          hostPath:
+            path: /run/udev
+            type: Directory
+        - name: dev-uinput
+          hostPath:
+            path: /dev/uinput
+            type: CharDevice
+        - name: dev-uhid
+          hostPath:
+            path: /dev/uhid
+            type: CharDevice
+        - name: nvidia-dev
+          hostPath:
+            path: /dev/nvidia0
+            type: CharDevice
+        - name: nvidia-ctl
+          hostPath:
+            path: /dev/nvidiactl
+            type: CharDevice
+        - name: nvidia-uvm
+          hostPath:
+            path: /dev/nvidia-uvm
+            type: CharDevice
+        - name: nvidia-driver
+          hostPath:
+            path: /run/opengl-driver
+            type: Directory
+        - name: nix-store
+          hostPath:
+            path: /nix/store
+            type: Directory
+        - name: dri
+          hostPath:
+            path: /dev/dri
+            type: Directory
+
+  volumeClaimTemplates:
+    - metadata:
+        name: wolf-config
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 1Gi

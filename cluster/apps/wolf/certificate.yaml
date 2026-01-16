@@ -1,0 +1,14 @@
+# TLS Certificate for wolf.grffn.ca
+# Uses grffn tenant's cert-manager issuer
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wolf-tls
+  namespace: wolf
+spec:
+  secretName: wolf-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - wolf.grffn.ca

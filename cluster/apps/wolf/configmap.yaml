@@ -1,0 +1,18 @@
+# Wolf configuration
+# Reference: https://games-on-whales.github.io/wolf/stable/
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wolf-config
+  namespace: wolf
+data:
+  # Wolf will auto-generate config.toml on first run
+  # These are environment overrides
+  WOLF_LOG_LEVEL: "INFO"
+  # Streaming ports (must match service definitions)
+  WOLF_HTTP_PORT: "47989"
+  WOLF_HTTPS_PORT: "47984"
+  WOLF_CONTROL_PORT: "47999"
+  WOLF_RTSP_SETUP_PORT: "48010"
+  WOLF_VIDEO_PING_PORT: "48100"
+  WOLF_AUDIO_PING_PORT: "48200"
